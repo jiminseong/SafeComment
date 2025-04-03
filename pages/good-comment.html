@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Safe CommentsAI</title>
+    <link rel="stylesheet" href="../popup.css" />
+  </head>
+  <body>
+    <div class="container" style="width: 180px">
+      <div class="column" style="align-items: flex-start">
+        <span id="title">해당 영상 제목</span>
+
+        <div style="padding: 1em">영상 제목 예시입니다.</div>
+
+        <hr style="width: 100%" />
+        <br />
+
+        <div class="column" style="align-items: flex-start; gap: 1em">
+          <div class="row" style="justify-content: space-between; align-items: center">
+            <span id="title">쓰고 싶은 내용</span><a href="../popup.html"></a>
+            <a>
+              <button
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 0.125em;
+                  min-width: 32px;
+                  min-height: 20px;
+                "
+              >
+                <img width="16px" src="../icons/sendIcon.svg" /></button
+            ></a>
+          </div>
+          <span style="font-size: 13px; color: #4d4d4d"
+            >입력 후 버튼을 눌러주세요.<br />더 좋은 댓글로 자동 추천됩니다.</span
+          >
+          <div style="display: flex; gap: 1em; align-items: start">
+            <textarea id="autoResize"></textarea>
+          </div>
+
+          <div id="recommend-wrapper">
+            <hr style="width: 100%" />
+            <span id="title">추천 내용</span>
+            <div id="high-light" style="display: flex; gap: 1em; align-items: center">
+              <span><strong id="recommend-comment">추천 내용 예시 입니다.</strong></span>
+            </div>
+          </div>
+
+          <div class="row" style="width: 100%; gap: 1em; justify-content: center">
+            <button id="copyBtn" style="min-width: 90px">복사 하기</button>
+            <a href="../popup.html"><button style="min-width: 90px">돌아 가기</button></a>
+          </div>
+        </div>
+      </div>
+
+      <div id="custom-alert" style="display: none">복사되었습니다!</div>
+
+      <script src="../scripts/good-comment.js"></script>
+    </div>
+  </body>
+</html>
