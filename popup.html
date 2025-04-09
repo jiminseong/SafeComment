@@ -9,9 +9,12 @@
     <div class="container">
       <img style="width: 100px; height: 100px" src="icons/icon.svg" alt="SafeComment" />
       <div class="column" style="gap: 1.25em; margin-top: 1em">
-        <a href="pages/comment-report.html"><button class="bg-none">영상 댓글 신고하기</button></a>
-        <a href="pages/good-comment.html"><button class="bg-none">더 좋은 댓글 달기</button></a>
+        <button id="btn-report" class="bg-none">영상 댓글 신고하기</button>
+        <button id="btn-good" class="bg-none">더 좋은 댓글 달기</button>
       </div>
+
+      <div id="custom-alert2" style="display: none"></div>
+
       <script src="popup.js"></script>
     </div>
   </body>

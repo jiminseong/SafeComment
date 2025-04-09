@@ -21,7 +21,7 @@ document.getElementById("copyBtn").addEventListener("click", () => {
     });
 });
 
-function showAlert(message) {
+export function showAlert(message) {
   const alertBox = document.getElementById("custom-alert");
   alertBox.textContent = message;
   alertBox.style.display = "block";
