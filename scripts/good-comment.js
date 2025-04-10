@@ -49,7 +49,7 @@ document.getElementById("submitBtn").addEventListener("click", () => {
         document.getElementById("videoTitle").textContent = title;
 
         try {
-          const res = await fetch("https://safe-comment-server-geminai.vercel.app/api/recommend", {
+          const res = await fetch("https://safe-comment-server.vercel.app/api/recommend", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ title, userComment }),

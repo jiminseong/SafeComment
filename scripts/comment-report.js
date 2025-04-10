@@ -85,23 +85,43 @@ function showAlert(message) {
 
 // 5. 신고 맡기기 버튼 동작
 document.getElementById("btn-report-comment").addEventListener("click", async () => {
-  const commentData = window.currentCommentData;
-  if (!commentData) return showAlert("신고할 댓글이 없어요.");
+  const userBadComment = document.getElementById("blur").textContent;
+  if (!userBadComment) return showAlert("댓글을 다시 신고해주세요");
+
+  const commentData = window.currentCommentData || {
+    comment: userBadComment,
+    user: "작성자 없음",
+    title: title,
+  };
 
   try {
-    const res = await fetch("https://safecomment-default-rtdb.firebaseio.com/reports.json", {
+    const res1 = await fetch("https://safe-comment-server.vercel.app/api/check", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        timestamp: new Date().toISOString(),
-        ...commentData,
-      }),
+      body: JSON.stringify({ title, userBadComment }),
     });
 
-    if (res.ok) {
-      showAlert("신고되었습니다!");
-    } else {
-      showAlert("신고에 실패했어요.");
+    if (res1) {
+      const data = await res1.json();
+      if (data.result.trim() === "true") {
+        const res2 = await fetch("https://safecomment-default-rtdb.firebaseio.com/reports.json", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            timestamp: new Date().toISOString(),
+            ...commentData,
+          }),
+        });
+        if (res2.ok) {
+          showAlert("신고되었습니다!");
+        } else {
+          showAlert("신고에 실패했어요.");
+        }
+      } else if (data.result.trim() === "false") {
+        showAlert("악플이 아니라고 판단했어요.");
+      } else {
+        showAlert("판단 결과를 알 수 없어요.");
+      }
     }
   } catch (e) {
     console.error(e);
@@ -132,3 +152,45 @@ function moveToPageIfSupported(targetPage) {
     }
   });
 }
+
+// ====== 위로 요청 버튼 클릭 시 ======
+document.getElementById("submitBtn2").addEventListener("click", () => {
+  const userBadComment = document.getElementById("blur").textContent;
+  if (!userBadComment) return showAlert("댓글을 다시 신고해주세요");
+
+  showAlert("기다려주세요!");
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: tabs[0].id },
+        func: () => document.title,
+      },
+      async (results) => {
+        const title = results[0]?.result || "제목 없음";
+
+        try {
+          const res = await fetch("https://safe-comment-server.vercel.app/api/comfort", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, userBadComment }),
+          });
+
+          if (!res.ok) throw new Error(`API 오류: ${res.status}`);
+
+          const data = await res.json();
+          document.getElementById("comfortText").textContent =
+            data.comfortText.trim() === "false"
+              ? "악플이 아니에요 ㅎㅎ"
+              : data.comfortText || "위로 결과 없음";
+
+          showAlert("힘드셨죠😌");
+        } catch (error) {
+          console.error("Gemini API 호출 실패:", error);
+          showAlert("추천에 실패했습니다.");
+          document.getElementById("comfortText").textContent = "다시 시도해주세요.";
+        }
+      }
+    );
+  });
+});
