@@ -1,27 +1,10 @@
-const textarea = document.getElementById("autoResize");
+const params = new URLSearchParams(window.location.search);
+const title = decodeURIComponent(params.get("title") || "제목 없음");
 
-textarea.addEventListener("input", () => {
-  textarea.style.height = "23px";
-  textarea.style.height = textarea.scrollHeight + "px";
-});
+document.getElementById("videoTitle").textContent = title;
 
-//복사 버튼 클릭
-document.getElementById("copyBtn").addEventListener("click", () => {
-  console.log(1);
-  const text = document.getElementById("recommend-comment").textContent;
-
-  navigator.clipboard
-    .writeText(text)
-    .then(() => {
-      showAlert("복사되었습니다!");
-    })
-    .catch((err) => {
-      showAlert("복사 실패 😢");
-      console.error(err);
-    });
-});
-
-export function showAlert(message) {
+// ====== 알림 표시 함수 ======
+function showAlert(message) {
   const alertBox = document.getElementById("custom-alert");
   alertBox.textContent = message;
   alertBox.style.display = "block";
@@ -35,40 +18,55 @@ export function showAlert(message) {
   }, 1000);
 }
 
-// 유튜브에서 정보 추출
-if (typeof chrome !== "undefined" && chrome.runtime?.onMessage) {
-  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.type === "extractYoutubeInfo") {
-      const title = document.querySelector("h1.title")?.innerText;
-      const description = document.querySelector("#description")?.innerText;
-      sendResponse({ title, description });
-    }
-  });
-} else {
-  console.error("chrome.runtime.onMessage를 사용할 수 없습니다.");
-}
+// ====== 복사 버튼 클릭 시 ======
+document.getElementById("copyBtn").addEventListener("click", () => {
+  const text = document.getElementById("recommendComment").textContent;
 
-// 댓글 추천 받기 버튼 클릭
+  navigator.clipboard
+    .writeText(text)
+    .then(() => showAlert("복사되었습니다!"))
+    .catch((err) => {
+      showAlert("복사 실패 😢");
+      console.error(err);
+    });
+});
+
+// ====== 추천 요청 버튼 클릭 시 ======
 document.getElementById("submitBtn").addEventListener("click", () => {
   const userComment = document.getElementById("commentInput").value;
+  if (!userComment.trim()) return showAlert("댓글을 입력해주세요!");
+
+  showAlert("추천 중입니다...");
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.sendMessage(tabs[0].id, { type: "extractYoutubeInfo" }, async (response) => {
-      const { title, description } = response;
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: tabs[0].id },
+        func: () => document.title,
+      },
+      async (results) => {
+        const title = results[0]?.result || "제목 없음";
+        document.getElementById("videoTitle").textContent = title;
 
-      // 서버로 요청 보내기 예시
-      const res = await fetch("https://your-server.com/api/recommend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          description,
-          userComment,
-        }),
-      });
+        try {
+          const res = await fetch("https://safe-comment-server-geminai.vercel.app/api/recommend", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, userComment }),
+          });
 
-      const data = await res.json();
-      document.getElementById("recommendComment").textContent = data.recommendComment;
-    });
+          if (!res.ok) throw new Error(`API 오류: ${res.status}`);
+
+          const data = await res.json();
+          document.getElementById("recommendComment").textContent =
+            data.recommendComment || "추천 결과 없음";
+          showAlert("추천 완료!");
+        } catch (error) {
+          console.error("Gemini API 호출 실패:", error);
+          showAlert("추천에 실패했습니다.");
+          document.getElementById("recommendComment").textContent = "추천 실패. 다시 시도해주세요.";
+        }
+      }
+    );
   });
 });

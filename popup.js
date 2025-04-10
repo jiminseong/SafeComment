@@ -29,7 +29,16 @@ function moveToPageIfSupported(targetPage) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const currentUrl = tabs[0]?.url || "";
     if (isSupportedPlatform(currentUrl)) {
-      window.location.href = targetPage;
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: tabs[0].id },
+          func: () => document.title,
+        },
+        (results) => {
+          const title = encodeURIComponent(results[0]?.result || "제목 없음");
+          window.location.href = `${targetPage}?title=${title}`;
+        }
+      );
     } else {
       showAlert("이 기능은 YouTube에서 <br/> 사용할 수 있어요.");
     }
